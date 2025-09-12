@@ -113,9 +113,10 @@ test_that("Correct segment flags are added to protein data",{
 
 # Spec 21: A warning is given if protein data is run through setBioProbeQCFlags.:------
 test_that("Warnings are given if protein data is run through setBioProbeQCFlags", {
-  expect_warning(expect_warning(expect_warning(expect_warning(
-    setBioProbeQCFlags(proteinData, qcCutoffs=list(minProbeRatio=0.1,
-                                                   percentFailGrubbs=20))))))
+  expect_warning(expect_warning(
+    expect_warning(expect_warning(setBioProbeQCFlags(proteinData, 
+                                                     qcCutoffs=list(minProbeRatio=0.1,
+                                                                    percentFailGrubbs=20))))))
 })
 
 
@@ -147,15 +148,15 @@ test_that("Expected HK are returned",{
 test_that("Concordance plots are plotted", {
   expect_error(plotConcordance(igg.names, proteinData, "Segment_Typ"))
   expect_error(fig <- plotConcordance(igg.names, proteinData, "Segment_Type"), NA)
-  expect_true(class(fig)[1] == "gg")
+  expect_true(GGally::is_ggmatrix(fig))
   expect_error(fig, NA)
   
   expect_error(fig <- plotConcordance(igg.names, proteinData, "Tissue"), NA)
-  expect_true(class(fig)[1] == "gg")
+  expect_true(GGally::is_ggmatrix(fig))
   expect_error(fig, NA)
   
   expect_error(fig <- plotConcordance(HOUSEKEEPERS[1:4], RNAData, "Segment_Type"), NA)
-  expect_true(class(fig)[1] == "gg")
+  expect_true(GGally::is_ggmatrix(fig))
   expect_error(fig, NA)
 })
 
@@ -207,7 +208,7 @@ test_that("computeNormalizationFactors vs normalization",{
 test_that("QC plots are plotted", {
   expect_error(fig <- plotNormFactorConcordance(object = proteinData, plotFactor = "Segment_Type", 
                                          normfactors = normfactors), NA)
-  expect_true(class(fig)[1] == "gg")
+  expect_true(GGally::is_ggmatrix(fig))
   expect_error(fig, NA)
   
   expect_error(fig <- qcProteinSignal(object = proteinData,
@@ -221,7 +222,10 @@ test_that("QC plots are plotted", {
   expect_true(all(proteinOrder %in% rownames(proteinData)))
   expect_true(all(rownames(proteinData) %in% proteinOrder))
   
-  expect_error(qcProteinSignal(object = RNAData))
+  exprs(proteinData)[igg.names[1],] <- 0
+  fig <- qcProteinSignal(object = proteinData,
+                         neg.names = igg.names)
+  expect_true(par("usr")[3L] < -1) # confirm 0s don't cutoff negative part of graph
 })
 
 
